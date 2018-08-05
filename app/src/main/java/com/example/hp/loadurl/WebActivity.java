@@ -1,21 +1,32 @@
 package com.example.hp.loadurl;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
-import android.support.v7.app.AppCompatActivity;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+
+import android.view.KeyEvent;
+import android.view.View;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.Button;
 
-public class WebActivity extends AppCompatActivity {
+import android.widget.Toast;
 
+public class WebActivity extends Activity
+{
 
-    private ProgressDialog progressDialog;
+    Button b1;
+    private WebView wv1;
+    ProgressDialog progressDialog;
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_web);
 
-        String url = "https://www.google.com";
-
+        // CODE FOR PROGRESS DIALOG
         progressDialog = new ProgressDialog(WebActivity.this);
         progressDialog.setMax(600);
         progressDialog.setMessage("Please wait...");
@@ -23,38 +34,59 @@ public class WebActivity extends AppCompatActivity {
         progressDialog.setProgress(0);
         progressDialog.setCancelable(false);
 
-        WebView web = (WebView)findViewById(R.id.web);
-        //String url = getIntent().getExtras().getString("website");
-        web.loadUrl(url);
-        /*web.setWebChromeClient(new WebChromeClient()
+        // GET THE URL ENTER BY USER
+        String url = getIntent().getExtras().getString("website");
+
+        // SETTING WEBVIEW OR WEBVIEW CLIENT
+        wv1 = (WebView) findViewById(R.id.webView);
+        wv1.setWebViewClient(new MyBrowser()
         {
-            public void onProgressChanged(WebView view, int progress)
-            {
-                progressDialog.setProgress(progress);
-                if (progress==100)
-                {
-                    progressDialog.dismiss();
-                }
-                else
-                {
-                    progressDialog.show();
-                }
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                Toast.makeText(WebActivity.this, description, Toast.LENGTH_SHORT).show();
             }
 
-        });*/
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                progressDialog.show();
+            }
 
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                progressDialog.dismiss();
+
+                String webUrl = wv1.getUrl();
+
+            }
+
+        });
+
+        wv1.getSettings().setLoadsImagesAutomatically(true);
+        wv1.getSettings().setJavaScriptEnabled(true);
+        wv1.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
+        wv1.loadUrl(url);
     }
 
-    public void onProgressChanged(WebView view, int progress)
+    class MyBrowser extends WebViewClient
     {
-        progressDialog.setProgress(progress);
-        if (progress==100)
+        @Override
+        public boolean shouldOverrideUrlLoading(WebView view, String url)
         {
-            progressDialog.dismiss();
+            view.loadUrl(url);
+            return true;
         }
-        else
+    }
+
+    // CODE FOR BACK PRESS
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event)
+    {
+        if ((keyCode == KeyEvent.KEYCODE_BACK) && this.wv1.canGoBack())
         {
-            progressDialog.show();
+            this.wv1.goBack();
+            return true;
         }
+
+        return super.onKeyDown(keyCode, event);
     }
 }
